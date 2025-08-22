@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+
 #include "systemcalls.h"
 
 /**
@@ -9,15 +14,8 @@
 */
 bool do_system(const char *cmd)
 {
-
-/*
- * TODO  add your code here
- *  Call the system() function with the command set in the cmd
- *   and return a boolean true if the system() call completed with success
- *   or false() if it returned a failure
-*/
-
-    return true;
+    int result = system(cmd);
+    return (result != 0) ? false : true;
 }
 
 /**
@@ -34,6 +32,63 @@ bool do_system(const char *cmd)
 *   by the command issued in @param arguments with the specified arguments.
 */
 
+bool _system_implementation(const char* redirection, char** cmd_args) {
+    bool result = false;
+
+    fflush(stdout);
+    pid_t pid = fork();
+
+    if(pid == -1) {
+        perror("Failed to fork child");
+    } else if(pid == 0) {
+        printf("Child process\n");
+
+        if(redirection) {
+            int fd = open(redirection, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+
+            if(fd < 0) {
+                perror("Error openning file");
+                exit(1);
+            } else if(dup2(fd, 1) < 0) {
+                perror("dup2 failed");
+                exit(1);
+            }
+
+            close(fd);
+        }
+
+        char** args = &cmd_args[0];
+        char* command = cmd_args[0];
+        int status = execv(command, args);
+
+        if(status == -1) {
+            perror("Child process completes with error");
+            exit(1);
+        }
+
+    } else {
+        printf("Parent process, child pid %d\n", pid);
+        int status = 0;
+        pid_t child_pid  = wait(&status);
+
+        while(child_pid != pid && child_pid != -1) {
+            printf("Another child process terminated %d. Status %d\n", child_pid, status);
+            child_pid = wait(&status);
+        }
+
+        if(child_pid == -1) {
+            perror("Waiting child terminate failed");
+        } else if(WIFEXITED(status) == true) {
+            printf("Child process %d terminated with status %d\n", child_pid, status);
+            if(WEXITSTATUS(status) == 0) {
+                result = true;
+            }
+        }
+    }
+
+    return result;
+}
+
 bool do_exec(int count, ...)
 {
     va_list args;
@@ -45,23 +100,10 @@ bool do_exec(int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
-
-/*
- * TODO:
- *   Execute a system command by calling fork, execv(),
- *   and wait instead of system (see LSP page 161).
- *   Use the command[0] as the full path to the command to execute
- *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
- *
-*/
-
+    bool result = _system_implementation(NULL, command);
     va_end(args);
 
-    return true;
+    return result;
 }
 
 /**
@@ -80,20 +122,8 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
         command[i] = va_arg(args, char *);
     }
     command[count] = NULL;
-    // this line is to avoid a compile warning before your implementation is complete
-    // and may be removed
-    command[count] = command[count];
-
-
-/*
- * TODO
- *   Call execv, but first using https://stackoverflow.com/a/13784315/1446624 as a refernce,
- *   redirect standard out to a file specified by outputfile.
- *   The rest of the behaviour is same as do_exec()
- *
-*/
-
+    bool result = _system_implementation(outputfile, command);
     va_end(args);
 
-    return true;
+    return result;
 }
