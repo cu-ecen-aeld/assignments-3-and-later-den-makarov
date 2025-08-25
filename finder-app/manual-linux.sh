@@ -17,7 +17,14 @@ if [ $# -lt 1 ]
 then
 	echo "Using default directory ${OUTDIR} for output"
 else
-	OUTDIR=$1
+    # Next trick to redirect outdir to the disk with bigger space
+    if [ $1 == "/tmp/aesd-autograder" ]
+    then
+        mkdir -p ${OUTDIR}
+        ln -s ${OUTDIR} $1
+    else
+        OUTDIR=$1
+    fi
 	echo "Using passed directory ${OUTDIR} for output"
 fi
 
