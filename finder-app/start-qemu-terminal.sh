@@ -7,7 +7,7 @@ set -e
 OUTDIR=$1
 
 if [ -z "${OUTDIR}" ]; then
-    OUTDIR=/home/denis/delete_me
+    OUTDIR=/tmp/aeld
     echo "No outdir specified, using ${OUTDIR}"
 fi
 
