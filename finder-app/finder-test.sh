@@ -68,6 +68,8 @@ done
 
 OUTPUTSTRING=$($SCRIPT_DIR/finder.sh "$WRITEDIR" "$WRITESTR")
 
+echo -n $OUTPUTSTRING > /tmp/assignment4-result.txt
+
 # remove temporary directories
 rm -rf /tmp/aeld-data
 
