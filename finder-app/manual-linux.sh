@@ -69,6 +69,9 @@ mkdir -p "lib" "lib64" "lib/modules" "lib/modules/${KERNEL_VERSION}"
 mkdir -p "usr" "usr/bin" "usr/lib" "usr/sbin"
 mkdir -p "var" "var/log"
 
+echo "Create custom application configuration directories"
+mkdir -p "etc/finder-app/"
+
 cd "$OUTDIR"
 if [ ! -d "${OUTDIR}/busybox" ]
 then
@@ -108,7 +111,7 @@ make CROSS_COMPILE=${CROSS_COMPILE}
 
 echo "Copy the finder related scripts and executables to the rootfs/home directory"
 cp $FINDER_APP_DIR/finder-test.sh $FINDER_APP_DIR/finder.sh $FINDER_APP_DIR/writer "${OUTDIR}/rootfs/home"
-cp -r $FINDER_APP_DIR/../conf "${OUTDIR}/rootfs/home"
+cp -r $FINDER_APP_DIR/../conf "${OUTDIR}/rootfs/etc/finder-app/"
 cp $FINDER_APP_DIR/autorun-qemu.sh "${OUTDIR}/rootfs/home"
 
 echo "Chown the root directory"
